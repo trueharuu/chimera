@@ -1,4 +1,3 @@
-#![feature(portable_simd)]
 pub mod header;
 pub mod board;
 pub mod piece;
