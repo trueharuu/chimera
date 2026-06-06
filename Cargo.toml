@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/chimera_core", "crates/chimera_nav", "crates/chimera_perft"]
+resolver = "3"

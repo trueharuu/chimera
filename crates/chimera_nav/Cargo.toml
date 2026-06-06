@@ -1,0 +1,7 @@
+[package]
+name = "chimera_nav"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chimera_core = { version = "0.1.0", path = "../chimera_core" }
