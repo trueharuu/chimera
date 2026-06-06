@@ -1,7 +1,7 @@
 use crate::{
     board::Board,
     data::{PIECE_CELLS, x_range},
-    header::{COLS, ROWS},
+    header::{COL_MASK, COLS, ROWS},
     piece::Piece,
     rotation::Rotation,
 };
@@ -12,6 +12,7 @@ pub struct CollisionMap {
 }
 
 impl CollisionMap {
+    #[inline(always)]
     /// Build the collision map for a given piece on a given board.
     pub const fn new(board: Board, piece: Piece) -> Self {
         let mut data = [[0; COLS]; Rotation::NB];
@@ -43,6 +44,7 @@ impl CollisionMap {
                 // mark all pivot rows invalid.
                 if px < min_px || px > max_px {
                     *i = rows_mask;
+                    x += 1;
                     continue;
                 }
 
@@ -104,5 +106,17 @@ impl CollisionMap {
     #[inline]
     pub const fn get(&self, rot: Rotation, x: usize, y: usize) -> bool {
         self.data[rot as usize][x] & (1 << y) != 0
+    }
+
+    #[inline]
+    pub const fn get_col(&self, rot: Rotation, x: usize) -> u8 {
+        self.data[rot as usize][x]
+    }
+
+    #[inline]
+    pub const fn landable(&self, rot: Rotation, x: usize) -> u8 {
+        let cm = self.data[rot as usize][x];
+        let free = !cm & COL_MASK as u8;
+        free & ((cm << 1) | 1)
     }
 }

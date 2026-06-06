@@ -1,4 +1,7 @@
-use crate::{header::{COL_BITS, COL_MASK, COLS, ROW0_MASK, ROWS, pext6}, placement::Move};
+use crate::{
+    header::{COL_BITS, COL_MASK, COLS, ROW0_MASK, ROWS, pext6},
+    placement::Move,
+};
 
 /// Column-major bitboard for a 6-row board.
 /// Column `x` occupies bits `[6 * x .. 6 * x + 5]`, with 6 bits per column and 10 columns, using 60 bits in total.
@@ -92,7 +95,6 @@ impl Board {
         (self.0 >> (COL_BITS * x + y)) & 1 != 0
     }
 
-
     /// Applies a single placement to the board.
     #[inline]
     pub const fn apply(&mut self, placement: Move) {
@@ -105,6 +107,8 @@ impl Board {
         }
 
         let clears = self.full_rows();
-        self.clear(clears);
+        if clears != 0 {
+            self.clear(clears);
+        }
     }
 }

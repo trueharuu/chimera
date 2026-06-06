@@ -80,6 +80,7 @@ pub const fn x_range(piece: Piece, rot: Rotation) -> (i8, i8) {
     (-min_dx, COLS as i8 - 1 - max_dx)
 }
 
+#[inline(always)]
 #[warn(clippy::match_same_arms)]
 pub const fn kicks_for(piece: Piece, from: Rotation, to: Rotation) -> &'static [(i8, i8)] {
     match piece {

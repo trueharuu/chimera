@@ -26,9 +26,9 @@ impl Piece {
     ];
 
     /// Canonical rotation for deduplication.
-    /// I, S, and Z have North/South and East/West symmetry and is only North or East.
-    /// O has North/East/South/West symmetry and is only North.
-    /// T, J, and L have no symmetries.
+    /// - I, S, and Z have North/South and East/West symmetry and is only North or East.
+    /// - O has North/East/South/West symmetry and is only North.
+    /// - T, J, and L have no symmetries.
     pub const fn canonical(self, rotation: Rotation) -> Rotation {
         match self {
             Piece::I | Piece::S | Piece::Z => unsafe {
