@@ -73,8 +73,8 @@ impl Board {
     ///
     /// # Panics
     /// Panics in debug builds if `full_mask` is exactly 0.
-    #[inline]
-    pub const fn clear(&mut self, full_mask: u32) {
+    #[inline(always)]
+    pub fn clear(&mut self, full_mask: u32) {
         debug_assert!(full_mask != 0);
 
         let keep = (!full_mask as u64) & COL_MASK;
@@ -96,8 +96,8 @@ impl Board {
     }
 
     /// Applies a single placement to the board.
-    #[inline]
-    pub const fn apply(&mut self, placement: Move) {
+    #[inline(always)]
+    pub fn apply(&mut self, placement: Move) {
         let cells = placement.cells();
         let mut i = 0;
         while i < cells.len() {

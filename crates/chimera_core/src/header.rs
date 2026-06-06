@@ -19,9 +19,10 @@ pub const ROW0_MASK: u64 = {
 
 /// Parallel bit extract. Extract bits of `val` at positions marked by `mask` and packs them to low bits.
 /// Only operates on the lowest 6 bits.
-pub const fn pext6(val: u64, mask: u64) -> u64 {
+#[inline(always)]
+pub fn pext6(val: u64, mask: u64) -> u64 {
     #[cfg(target_feature = "bmi2")]
-    /// SAFETY: BMI2 guaranteed by `target_feature`.
+    // SAFETY: BMI2 guaranteed by `target_feature`.
     return unsafe { core::arch::x86_64::_pext_u64(val, mask) };
 
     #[cfg(not(target_feature = "bmi2"))]
