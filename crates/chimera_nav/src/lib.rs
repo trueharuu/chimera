@@ -2,3 +2,4 @@
 pub mod global;
 pub mod buffer;
 pub mod instant;
+pub mod detect;

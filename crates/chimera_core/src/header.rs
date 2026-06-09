@@ -3,40 +3,47 @@ pub const ROWS: usize = 6;
 /// The number of columns a board has.
 pub const COLS: usize = 10;
 
-pub const COL_MASK: u64 = 0b111111;
 pub const COL_BITS: usize = 6;
+pub const COL_MASK: u64 = 0b111111;
 
-/// Mask which selects bit `0` of every column, and represents a full row.
-pub const ROW0_MASK: u64 = {
-    let mut m = 0u64;
+pub const ROW_MASK: u64 = 0x0410410410410411;
+pub const TOP_ROW_MASK: u64 = 0x0820820820820820;
+
+pub const COL_MASK_ALL: u64 = {
+    let mut m = 0;
     let mut x = 0;
     while x < COLS {
-        m |= 1u64 << (COL_BITS * x);
+        m |= COL_MASK << (COL_BITS * x);
         x += 1;
     }
     m
 };
 
-/// Parallel bit extract. Extract bits of `val` at positions marked by `mask` and packs them to low bits.
-/// Only operates on the lowest 6 bits.
 #[inline(always)]
-pub fn pext6(val: u64, mask: u64) -> u64 {
-    #[cfg(target_feature = "bmi2")]
-    // SAFETY: BMI2 guaranteed by `target_feature`.
-    return unsafe { core::arch::x86_64::_pext_u64(val, mask) };
+pub const fn idx(x: usize, y: usize) -> usize {
+    COL_BITS * x + y
+}
 
-    #[cfg(not(target_feature = "bmi2"))]
-    {
-        let mut result = 0u64;
-        let mut out = 0;
-        let mut m = mask & COL_MASK;
-        while m != 0 {
-            let bit = m.trailing_zeros();
-            result |= ((val >> bit) & 1) << out;
-            out += 1;
-            m &= m - 1;
-        }
-
-        result
+#[inline(always)]
+pub const fn fill_low(s: u32) -> u64 {
+    let col = (1u64 << s) - 1;
+    let mut m = 0u64;
+    let mut x = 0;
+    while x < COLS {
+        m |= col << (COL_BITS * x);
+        x += 1;
     }
+    m
+}
+
+#[inline(always)]
+pub const fn fill_high(s: u32) -> u64 {
+    let col = !((1u64 << (COL_BITS as u32 - s)) - 1) & COL_MASK;
+    let mut m = 0u64;
+    let mut x = 0;
+    while x < COLS {
+        m |= col << (COL_BITS * x);
+        x += 1;
+    }
+    m
 }

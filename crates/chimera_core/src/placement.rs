@@ -60,14 +60,14 @@ impl Move {
     }
 
     /// The cells this placement takes up.
-    pub const fn cells(self) -> [(u8, u8); 4] {
-        let mut out = [(self.x() as u8, self.y() as u8); 4];
+    pub const fn cells(self) -> [(usize, usize); 4] {
+        let mut out = [(self.x(), self.y()); 4];
         let offsets = PIECE_CELLS[self.piece() as usize][self.rot() as usize];
 
         let mut i = 0;
         while i < offsets.len() {
-            out[i].0 = out[i].0.strict_add_signed(offsets[i].0);
-            out[i].1 = out[i].1.strict_add_signed(offsets[i].1);
+            out[i].0 = out[i].0.wrapping_add_signed(offsets[i].0 as isize);
+            out[i].1 = out[i].1.wrapping_add_signed(offsets[i].1 as isize);
 
             i += 1;
         }

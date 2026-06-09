@@ -9,9 +9,9 @@ use crate::{
 };
 
 pub fn render(board_a: &Board, placement_a: Option<Move>) {
-    println!("\u{250c}{}\u{2510}", "\u{2500}".repeat(20),);
+    println!("  \u{250c}{}\u{2510}", "\u{2500}".repeat(20));
     for y in (0..ROWS).rev() {
-        print!("\u{2502}");
+        print!("{y} \u{2502}");
         for x in 0..COLS {
             let cell = board_a.get(x, y);
             if cell {
@@ -33,7 +33,7 @@ pub fn render(board_a: &Board, placement_a: Option<Move>) {
         }
         println!("\u{2502}");
     }
-    println!("\u{2514}{}\u{2518}", "\u{2500}".repeat(20));
+    println!("  \u{2514}{}\u{2518}", "\u{2500}".repeat(20));
 }
 
 pub fn draw_cell(piece: Piece, is_center: bool) -> String {
@@ -50,38 +50,20 @@ pub fn draw_cell(piece: Piece, is_center: bool) -> String {
     format!("{l}{s}\x1b[0m")
 }
 
-pub fn render_collision(board_a: &Board, collision_map: CollisionMap, rot: Rotation, piece: Piece) {
-    // Precompute which board cells are part of any legal placement of
-    // `piece` in rotation `rot` on `board_a` using `collision_map`.
-    let mut possible = [[false; COLS]; ROWS];
-
-    let cells = PIECE_CELLS[piece as usize][rot as usize];
-    for px in 0..COLS {
-        let mask = collision_map.data[rot as usize][px];
-        for py in 0..ROWS {
-            // mask bit == 0 means pivot (px,py) is allowed
-            if (mask >> py) & 1 != 0 {
-                continue;
-            }
-
-            for &(dx, dy) in &cells {
-                let cx = px as i8 + dx;
-                let cy = py as i8 + dy;
-                if cx >= 0 && cx < COLS as i8 && cy >= 0 && cy < ROWS as i8 {
-                    possible[cy as usize][cx as usize] = true;
-                }
-            }
-        }
-    }
-
+pub fn render_collision(
+    board_a: &Board,
+    collision_map: &CollisionMap,
+    rot: Rotation,
+    piece: Piece,
+) {
     println!("\u{250c}{}\u{2510}", "\u{2500}".repeat(20),);
     for y in (0..ROWS).rev() {
         print!("\u{2502}");
-        for (x, i) in possible[y].iter().enumerate().take(COLS) {
+        for x in 0..COLS {
             let cell = board_a.get(x, y);
             if cell {
                 print!("\x1b[48;2;127;127;127m  \x1b[0m");
-            } else if *i {
+            } else if collision_map.landed(x, y, rot) {
                 print!("{}", draw_cell(piece, false));
             } else {
                 print!("  ");

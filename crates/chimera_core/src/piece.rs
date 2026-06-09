@@ -47,4 +47,12 @@ impl Piece {
             Piece::T | Piece::J | Piece::L => 4,
         }
     }
+
+    pub const fn is_canonical(self, rotation: Rotation) -> bool {
+        match self {
+            Piece::I | Piece::S | Piece::Z => matches!(rotation, Rotation::North | Rotation::East),
+            Piece::O => matches!(rotation, Rotation::North),
+            Piece::T | Piece::J | Piece::L => true,
+        }
+    }
 }

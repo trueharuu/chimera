@@ -7,3 +7,10 @@ edition = "2024"
 chimera_core = { version = "0.1.0", path = "../chimera_core" }
 chimera_nav = { version = "0.1.0", path = "../chimera_nav" }
 rayon = "1.12.0"
+
+[dev-dependencies]
+criterion = "0.8.2"
+
+[[bench]]
+name = "perft"
+harness = false
