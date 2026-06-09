@@ -1,7 +1,5 @@
 use chimera_core::{
-    board::Board,
-    piece::Piece,
-    spin::{Spins},
+    board::Board, collision_map::CollisionMap, piece::Piece, rotation::Rotation, spin::Spins,
 };
 
 use crate::buffer::MoveBuffer;
@@ -29,6 +27,11 @@ use crate::buffer::MoveBuffer;
 ///
 /// Movegen should output both sets of placements if available. If the same position is reachable with both a spin and without (i.e. T placement vs. T-spin-mini),
 /// then they are considered distinct.
-pub fn movegen(_board: Board, _piece: Piece, _spins: Spins, _out: &mut MoveBuffer) {
+pub fn movegen(board: Board, piece: Piece, _spins: Spins, _out: &mut MoveBuffer) {
+    let mut usable_map = CollisionMap::new(board, piece);
+    let mut landable_map = usable_map.landable();
+
+    let mut search = [Board::EMPTY; Rotation::NB];
+
     
 }

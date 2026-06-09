@@ -55,4 +55,17 @@ impl Piece {
             Piece::T | Piece::J | Piece::L => true,
         }
     }
+
+    pub const fn from_index(index: u8) -> Self {
+        match index {
+            0 => Self::T,
+            1 => Self::I,
+            2 => Self::J,
+            3 => Self::L,
+            4 => Self::O,
+            5 => Self::S,
+            6 => Self::Z,
+            _ => unreachable!(),
+        }
+    }
 }

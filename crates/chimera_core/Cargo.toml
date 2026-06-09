@@ -11,3 +11,7 @@ criterion = "0.8.2"
 [[bench]]
 name = "collision_map"
 harness = false
+
+[[bench]]
+name = "collision_map_get"
+harness = false
