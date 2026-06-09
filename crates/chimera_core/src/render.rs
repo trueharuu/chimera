@@ -61,10 +61,10 @@ pub fn render_collision(
         print!("\u{2502}");
         for x in 0..COLS {
             let cell = board_a.get(x, y);
-            if cell {
-                print!("\x1b[48;2;127;127;127m  \x1b[0m");
-            } else if collision_map.landed(x, y, rot) {
+            if !collision_map.get(x, y, rot) {
                 print!("{}", draw_cell(piece, false));
+            } else if cell {
+                print!("\x1b[48;2;127;127;127m  \x1b[0m");
             } else {
                 print!("  ");
             }

@@ -21,6 +21,14 @@ impl Move {
         Self(0xFFFF)
     }
 
+    pub const fn bits(self) -> u16 {
+        self.0
+    }
+
+    pub const fn from_bits(bits: u16) -> Self {
+        Self(bits)
+    }
+
     /// Create a [`Move`] from its parts.
     pub const fn new(x: usize, y: usize, rot: Rotation, piece: Piece, spin: Spin) -> Self {
         debug_assert!(x < 10);

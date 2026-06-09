@@ -1,24 +1,12 @@
-use std::{
-    sync::{
-        Arc, Mutex,
-        atomic::{AtomicUsize, Ordering},
-    },
-    time::Instant,
-};
+use std::{sync::atomic::{AtomicUsize, Ordering}, time::Instant};
 
 use chimera_core::{
-    board::Board, collision_map::CollisionMap, piece::Piece, placement::Move, queue::Queue,
-    render::{render, render_collision}, rotation::Rotation, spin::Spins,
+    board::Board, piece::Piece, queue::Queue, spin::Spins
 };
 use chimera_nav::{buffer::MoveBuffer, global::movegen};
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
-pub fn perft(
-    board: Board,
-    queue: Queue,
-    depth: usize,
-    total: Arc<Mutex<Vec<(Board, Move)>>>,
-) -> usize {
+pub fn perft(board: Board, queue: Queue, depth: usize) -> usize {
     if depth == 0 || queue.is_empty() {
         return 0;
     }
@@ -35,15 +23,13 @@ pub fn perft(
     out.iter().par_bridge().for_each(|i| {
         let mut cpy = board;
 
-        total.lock().unwrap().push((cpy, *i));
-
         // render(&cpy, Some(*i));
         // println!("{i:?}");
         // println!("{:?}", t_spin_from_corners(board, i.x(), i.y(), i.rot(), false));
 
         cpy.apply(*i);
         zz.fetch_add(
-            perft(cpy, queue.slice(1, queue.len()), depth - 1, total.clone()),
+            perft(cpy, queue.slice(1, queue.len()), depth - 1),
             Ordering::Relaxed,
         );
     });
@@ -51,38 +37,15 @@ pub fn perft(
     zz.load(Ordering::Relaxed)
 }
 fn main() {
-    let mut board = Board::EMPTY;
+    let board = Board::EMPTY;
 
-    // board.set_many(
-    //     &[
-    //         (0, 0),
-    //         (0, 1),
-    //         (0, 2),
-    //         (1, 0),
-    //         (3, 0),
-    //         (3, 2),
-    //         (4, 0),
-    //         (4, 1),
-    //         (4, 2),
-    //         (5, 0),
-    //         (5, 1),
-    //         (6, 0),
-    //         (9, 0),
-    //         (9, 1),
-    //         (8, 1),
-    //         (8, 2),
-    //     ],
-    //     true,
-    // );
+    let depth = 6;
+    let queue = Queue::from_slice(&[Piece::I, Piece::O, Piece::L, Piece::J, Piece::Z, Piece::S, Piece::T]);
 
-    let p = Piece::T;
-    let r = Rotation::South;
-    let i = Instant::now();
-    let cm = CollisionMap::new(board, p);
-    let e = i.elapsed();
-    println!("generated in \x1b[34m{p:?}, {r:?}\x1b[0m in \x1b[32m{e:?}\x1b[0m");
-    render(&board, None);
-    render_collision(&board, &cm, r, p);
+    let start = Instant::now();
+    let nodes = perft(board, queue, depth);
+    let elapsed = start.elapsed();
+    println!("perft({depth}) = \x1b[34m{nodes}\x1b[0m in {elapsed:?} (\x1b[33m{}\x1b[0m nodes/s)", suffixize(nodes as f64 / elapsed.as_secs_f64()));
 }
 
 pub fn suffixize(t: f64) -> String {
