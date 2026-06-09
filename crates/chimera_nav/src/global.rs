@@ -8,6 +8,7 @@ use chimera_core::{
     rotation::Rotation,
     spin::{Spin, Spins},
 };
+use rustc_hash::FxHashSet;
 
 use crate::buffer::MoveBuffer;
 use crate::detect::{is_immobile, t_spin_from_corners};
@@ -139,7 +140,7 @@ pub fn movegen(board: Board, piece: Piece, spins: Spins, out: &mut MoveBuffer) {
     let board_any = |b: &Board| b.0.iter().any(|&v| v != 0);
 
     // collect canonicalized moves (u16 keys) to deduplicate
-    let mut keys: HashSet<u16> = HashSet::new();
+    let mut keys: FxHashSet<u16> = FxHashSet::default();
 
     // BFS
     while done.iter().any(|&d| !d) {
@@ -167,11 +168,7 @@ pub fn movegen(board: Board, piece: Piece, spins: Spins, out: &mut MoveBuffer) {
 
             // collect landable placements from this rotation
             let land = search[r] & candidates[r];
-            if !board_any(&land) {
-                //println!("[movegen] rot {} no landable positions", r);
-            } else {
-                // println!("[movegen] rot {} landable={} ", r, popcount_board(&land));
-            }
+
             for x in 0..COLS {
                 let mut col = land.0[x];
                 while col != 0 {

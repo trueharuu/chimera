@@ -39,7 +39,7 @@ pub fn perft(board: Board, queue: Queue, depth: usize) -> usize {
 fn main() {
     let board = Board::EMPTY;
 
-    let depth = 6;
+    let depth = 7;
     let queue = Queue::from_slice(&[Piece::I, Piece::O, Piece::L, Piece::J, Piece::Z, Piece::S, Piece::T]);
 
     let start = Instant::now();
