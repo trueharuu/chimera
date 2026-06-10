@@ -54,7 +54,7 @@ pub fn movegen(board: Board, piece: Piece, spins: Spins, out: &mut MoveBuffer) {
     for r in 0..Rotation::NB {
         let rot = Rotation::from(r as u8);
         let (delta_x, delta_y) = piece.rotation_offset(rot);
-        offsets[r] = (-(delta_x as i32), -(delta_y as i32));
+        offsets[r] = (delta_x as i32, delta_y as i32);
     }
 
     for r in 0..Rotation::NB {
