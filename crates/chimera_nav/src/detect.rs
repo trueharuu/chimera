@@ -15,22 +15,22 @@ pub const fn spin_max(a: Spin, b: Spin) -> Spin {
 #[inline]
 pub fn is_immobile(cm: &CollisionMap, rot: Rotation, x: usize, y: usize) -> bool {
     // Left
-    if x > 0 && !cm.get(x - 1, y, rot) {
+    if x > 0 && !cm.collides(x - 1, y, rot) {
         return false;
     }
 
     // Right
-    if x + 1 < COLS && !cm.get(x + 1, y, rot) {
+    if x + 1 < COLS && !cm.collides(x + 1, y, rot) {
         return false;
     }
 
     // Down (y - 1); y == 0 means floor → blocked
-    if y > 0 && !cm.get(x, y - 1, rot) {
+    if y > 0 && !cm.collides(x, y - 1, rot) {
         return false;
     }
 
     // Up (y + 1); if bit y+1 is free, piece can shift up
-    if y + 1 < 8 && !cm.get(x, y + 1, rot) {
+    if y + 1 < 8 && !cm.collides(x, y + 1, rot) {
         return false;
     }
 

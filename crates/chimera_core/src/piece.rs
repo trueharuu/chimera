@@ -68,4 +68,57 @@ impl Piece {
             _ => unreachable!(),
         }
     }
+
+    pub const fn rotation_offset(self, from_rot: Rotation) -> (i8, i8) {
+        match self {
+            Piece::T | Piece::J | Piece::L => (0, 0),
+            Piece::S | Piece::Z => {
+                // if we are in south, add (0, -1) and rotate to north
+                if matches!(from_rot, Rotation::South) {
+                    return (0, -1);
+                }
+
+                // if we are in west, add (-1, 0) and rotate to east
+                if matches!(from_rot, Rotation::West) {
+                    return (-1, 0);
+                }
+
+                (0, 0)
+            }
+
+            Piece::I => {
+                // if we are in south, add (-1, 0) and rotate to north
+                if matches!(from_rot, Rotation::South) {
+                    return (-1, 0);
+                }
+
+                // if we are in west, add (0, -1) and rotate to east
+                if matches!(from_rot, Rotation::West) {
+                    return (0, -1);
+                }
+
+                (0, 0)
+            }
+
+            Piece::O => {
+                // if we are in east, add (0, -1) and rotate to north
+                if matches!(from_rot, Rotation::East) {
+                    return (0, -1);
+                }
+
+                // if we are in south, add (-1, -1) and rotate to north
+                if matches!(from_rot, Rotation::South) {
+                    return (-1, -1);
+                }
+
+                // if we are in west, add (-1, 0) and rotate to north
+                if matches!(from_rot, Rotation::West) {
+                    return (-1, 0);
+                }
+
+                (0, 0)
+                // _ => self,
+            }
+        }
+    }
 }

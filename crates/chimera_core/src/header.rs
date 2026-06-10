@@ -1,5 +1,5 @@
 /// The maximum number of rows a board can have.
-pub const ROWS: usize = 6;
+pub const ROWS: usize = 20;
 /// The number of columns a board has.
 pub const COLS: usize = 10;
 

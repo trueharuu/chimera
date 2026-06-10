@@ -3,4 +3,6 @@ members = ["crates/chimera_core", "crates/chimera_nav", "crates/chimera_perft", 
 resolver = "3"
 
 [profile.release]
+lto = true
+codegen-units = 1
 debug = true

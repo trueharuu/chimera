@@ -12,6 +12,23 @@ pub struct Board(pub [u64; COLS]);
 impl Board {
     pub const EMPTY: Self = Self([0u64; COLS]);
 
+    pub fn shift(self, dx: i32, dy: i32) -> Board {
+        let mut result = [0u64; 10];
+
+        for x in 0..10i32 {
+            let src_x = x + dx; 
+
+            if !(0..10).contains(&src_x) {
+                result[x as usize] = u64::MAX;
+            } else {
+                let src_col = self.0[src_x as usize];
+                result[x as usize] = shift_vertical(src_col, dy);
+            }
+        }
+
+        Board(result)
+    }
+
     /// Whether the cell `(x, y)` is filled.
     #[inline(always)]
     pub const fn get(self, x: usize, y: usize) -> bool {
@@ -26,9 +43,9 @@ impl Board {
         self.0[x] |= 1u64 << y;
     }
 
-    /// Clear the cell at `(x, y)`.
+    /// Unset the cell at `(x, y)`.
     #[inline(always)]
-    pub const fn clear(&mut self, x: usize, y: usize) {
+    pub const fn unset(&mut self, x: usize, y: usize) {
         debug_assert!(x < COLS && y < COL_BITS);
 
         self.0[x] &= !(1u64 << y);
@@ -51,67 +68,86 @@ impl Board {
         self.0[x]
     }
 
-    /// Shift every column by `dy` rows (filling out-of-bounds with 1s, i.e. solid)
-    /// and shift columns by `dx` (filling out-of-bounds columns with 0s,
-    /// since the x_min/x_max guard handles those explicitly).
-    #[inline(always)]
-    pub fn shift(self, dx: i32, dy: i32) -> Board {
-        self.shift_rows(dy).shift_cols(dx)
-    }
-
-    #[inline(always)]
-    pub const fn shift_rows(self, dy: i32) -> Board {
-        if dy == 0 {
-            return self;
-        }
-
-        if dy > 0 {
-            let s = dy as u32;
-            let mut out = [0u64; COLS];
-            let mut x = 0;
-            while x < COLS {
-                let shifted = (self.0[x] << s) & COL_MASK;
-                out[x] = shifted | fill_low(s);
-                x += 1;
-            }
-            Board(out)
-        } else {
-            let s = (-dy) as u32;
-            let mut out = [0u64; COLS];
-            let mut x = 0;
-            while x < COLS {
-                let shifted = (self.0[x] >> s) & COL_MASK;
-                out[x] = shifted | fill_high(s);
-                x += 1;
-            }
-            Board(out)
-        }
-    }
-
-    #[inline(always)]
-    pub fn shift_cols(self, dx: i32) -> Board {
-        let mut out = [0; COLS];
-
-        if dx > 0 {
-            let shift = dx as usize;
-            if shift < COLS {
-                out[shift..].copy_from_slice(&self.0[..COLS - shift]);
-            }
-        } else if dx < 0 {
-            let shift = (-dx) as usize;
-            if shift < COLS {
-                out[..COLS - shift].copy_from_slice(&self.0[shift..]);
-            }
-        } else {
-            return self;
-        }
-
-        Board(out)
-    }
-
     #[inline(always)]
     pub const fn apply(&mut self, c: Move) {
         self.set_many(&c.cells());
+    }
+
+    /// Bitmask of filled rows in the board.
+    #[inline(always)]
+    pub const fn filled_rows(self) -> u64 {
+        let mut mask = self.0[0];
+        let mut x = 1;
+        while x < COLS {
+            mask &= self.0[x];
+            x += 1;
+        }
+
+        mask
+    }
+
+    /// Moves all completely-filled rows to the bottom.
+    #[inline(always)]
+    pub const fn clearshift(&mut self, mask: u64) {
+        if mask == 0 {
+            return;
+        }
+
+        let mut x = 0;
+        while x < COLS {
+            let col = self.0[x];
+
+            let mut bottom = 0u64;
+            let mut top = 0u64;
+
+            let mut bottom_idx = 0;
+            let mut top_idx = mask.count_ones() as usize;
+
+            let mut y = 0;
+            while y < 64 {
+                let bit = (col >> y) & 1;
+
+                if ((mask >> y) & 1) != 0 {
+                    bottom |= bit << bottom_idx;
+                    bottom_idx += 1;
+                } else {
+                    top |= bit << top_idx;
+                    top_idx += 1;
+                }
+
+                y += 1;
+            }
+
+            self.0[x] = bottom | top;
+            x += 1;
+        }
+    }
+
+    /// Entirely remove all completely-filled rows and shift everything above down by `mask.count_ones()`.
+    #[inline(always)]
+    pub const fn clear(&mut self, mask: u64) {
+        if mask == 0 {
+            return;
+        }
+
+        let mut x = 0;
+        while x < COLS {
+            let col = self.0[x];
+            let mut out = 0u64;
+            let mut out_idx = 0;
+            let mut y = 0;
+            while y < 64 {
+                if ((mask >> y) & 1) == 0 {
+                    let bit = (col >> y) & 1;
+                    out |= bit << out_idx;
+                    out_idx += 1;
+                }
+
+                y += 1;
+            }
+            self.0[x] = out;
+            x += 1;
+        }
     }
 }
 
@@ -171,5 +207,20 @@ impl Not for Board {
         }
 
         self
+    }
+}
+
+#[inline]
+fn shift_vertical(col: u64, dy: i32) -> u64 {
+    if dy == 0 {
+        col
+    } else if dy > 0 {
+        // Shift up: upper rows move to lower bit positions
+        // Fill top bits (high positions) with 1s (occupied)
+        (col >> dy as u32) | (!0u64 << (64 - dy as u32))
+    } else {
+        // Shift down: lower rows move to higher bit positions
+        // Fill bottom bits (low positions) with 1s (occupied)
+        (col << (-dy) as u32) | ((1u64 << (-dy) as u32) - 1)
     }
 }

@@ -4,7 +4,7 @@ use std::{
     time::Instant,
 };
 
-use chimera_core::{board::Board, piece::Piece, queue::Queue, render::render, spin::Spins};
+use chimera_core::{board::Board, collision_map::CollisionMap, piece::Piece, placement::Move, queue::Queue, render::{render, render_collision}, rotation::Rotation, spin::Spins};
 use chimera_nav::{buffer::MoveBuffer, global::movegen};
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
@@ -22,15 +22,17 @@ pub fn perft(board: Board, queue: Queue, depth: usize) -> usize {
 
     zz.fetch_add(out.len(), Ordering::Relaxed);
 
-    out.iter().for_each(|i| {
+    out.iter().par_bridge().for_each(|i| {
         let mut cpy = board;
 
         // if on {
-        //     render(&cpy, Some(*i));
-        //     println!("{i:?}");
+            // render(&cpy, Some(*i));
+            // println!("{i:?}");
         // }
 
         cpy.apply(*i);
+        let mask = cpy.filled_rows();
+        cpy.clear(mask);
         zz.fetch_add(
             perft(cpy, queue.slice(1, queue.len()), depth - 1),
             Ordering::Relaxed,
@@ -40,60 +42,77 @@ pub fn perft(board: Board, queue: Queue, depth: usize) -> usize {
     zz.load(Ordering::Relaxed)
 }
 fn main() {
-    let o = std::env::args().nth(1);
-    let on = o == Some("1".to_string());
+    // {
+    //     let mut board = Board::EMPTY;
+    //     board.set_many(&[(0,0),(0,1),(1,1),(1,2),(0,2),(0,3),(1,3),(2,3),(1,0),(2,0),(2,1),(3,1),(4,1),(5,1),(6,0),(6,1),(7,0),(7,1),(7,2),(7,3),(8,0),(8,1),(8,2),(8,3),(9,0),(9,1),(9,2),(9,3)]);
+    //     render(&board, None);
+    //     let mask = board.filled_rows();
+    //     println!("mask: {mask:b}");
+    //     board.clear(mask);
+    //     render(&board, None);
+    // }
     let mut board = Board::EMPTY;
 
-    if on {
-        // tki
-        board.set_many(&[
-            (0, 0),
-            (0, 1),
-            (0, 2),
-            (1, 0),
-            (3, 0),
-            (4, 0),
-            (5, 0),
-            (6, 0),
-            (3, 2),
-            (4, 1),
-            (4, 2),
-            (5, 1),
-            (8, 0),
-            (8, 1),
-            (9, 0),
-            (9, 1),
-            (7, 0),
-            (7, 1),
-            (6, 1),
-            (6, 2),
-            (7, 2),
-            (7, 3),
-            (8, 2),
-            (9, 2),
-        ]);
-    }
+    // if on {
+    //     // tki
+        // board.set_many(&[
+        //     (0, 0),
+        //     (0, 1),
+        //     (0, 2),
+        //     (1, 0),
+        //     (3, 0),
+        //     (4, 0),
+        //     (5, 0),
+        //     (6, 0),
+        //     (3, 2),
+        //     (4, 1),
+        //     (4, 2),
+        //     (5, 1),
+        //     (8, 0),
+        //     (8, 1),
+        //     (9, 0),
+        //     (9, 1),
+        //     (7, 0),
+        //     (7, 1),
+        //     (6, 1),
+        //     (6, 2),
+        //     (7, 2),
+        //     (7, 3),
+        //     (8, 2),
+        //     (9, 2),
+        // ]);
+    // }
 
-    let depth = 1;
-    let queue = Queue::from_slice(&[
-        Piece::T,
-        Piece::I,
-        Piece::J,
-        Piece::L,
-        Piece::O,
-        Piece::S,
-        Piece::Z,
-    ]);
-
+    let p = Piece::I;
     let start = Instant::now();
-    let nodes = black_box(perft(board, queue, depth));
+    let cm = CollisionMap::new(board, p);
     let elapsed = start.elapsed();
-    if on {
-        println!(
-            "perft({depth}) = \x1b[34m{nodes}\x1b[0m in {elapsed:?} (\x1b[33m{}\x1b[0m nodes/s)",
-            suffixize(nodes as f64 / elapsed.as_secs_f64())
-        );
+    println!("collision map generated in {elapsed:?}");
+    for r in Rotation::ALL {
+        render_collision(&board, &cm, r, p);
+        for x in 0..10 {
+            for y in 0..20 {
+                let landed = cm.landed(x, y, r);
+                if landed {
+                    render(&board, Some(Move::new(x, y, r, p, chimera_core::spin::Spin::None)));
+                }
+            }
+        }
     }
+
+    // let depth = 6;
+    // let queue = Queue::from_slice(&Piece::ALL);
+
+    // let start = Instant::now();
+    // let nodes = black_box(perft(board, queue, depth));
+    // let elapsed = start.elapsed();
+    // let _ = (nodes, elapsed);
+    // // if on {
+    // println!(
+    //     "perft({depth}) = \x1b[34m{nodes}\x1b[0m in {elapsed:?} (\x1b[33m{}\x1b[0m nodes/s)",
+    //     suffixize(nodes as f64 / elapsed.as_secs_f64())
+    // );
+    // }
 }
 
 pub fn suffixize(t: f64) -> String {

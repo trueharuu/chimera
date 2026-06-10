@@ -53,12 +53,7 @@ pub fn movegen(board: Board, piece: Piece, spins: Spins, out: &mut MoveBuffer) {
     let mut offsets: [(i32, i32); Rotation::NB] = [(0, 0); Rotation::NB];
     for r in 0..Rotation::NB {
         let rot = Rotation::from(r as u8);
-        // choose a safe central move and canonicalize to get delta
-        let m_nc = Move::new(mid_x, mid_y, rot, piece, Spin::None);
-        let m_c = m_nc.canonicalize();
-        let delta_x = m_c.x() as isize - mid_x as isize;
-        let delta_y = m_c.y() as isize - mid_y as isize;
-        // offset to transform canonical -> this rotation
+        let (delta_x, delta_y) = piece.rotation_offset(rot);
         offsets[r] = (-(delta_x as i32), -(delta_y as i32));
     }
 
