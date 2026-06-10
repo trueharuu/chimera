@@ -8,7 +8,7 @@ use chimera_core::{board::Board, piece::Piece, queue::Queue, render::render, spi
 use chimera_nav::{buffer::MoveBuffer, global::movegen};
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
-pub fn perft(board: Board, queue: Queue, depth: usize, on: bool) -> usize {
+pub fn perft(board: Board, queue: Queue, depth: usize) -> usize {
     if depth == 0 || queue.is_empty() {
         return 0;
     }
@@ -25,14 +25,14 @@ pub fn perft(board: Board, queue: Queue, depth: usize, on: bool) -> usize {
     out.iter().for_each(|i| {
         let mut cpy = board;
 
-        if on {
-            render(&cpy, Some(*i));
-            println!("{i:?}");
-        }
-        
+        // if on {
+        //     render(&cpy, Some(*i));
+        //     println!("{i:?}");
+        // }
+
         cpy.apply(*i);
         zz.fetch_add(
-            perft(cpy, queue.slice(1, queue.len()), depth - 1, on),
+            perft(cpy, queue.slice(1, queue.len()), depth - 1),
             Ordering::Relaxed,
         );
     });
@@ -86,7 +86,7 @@ fn main() {
     ]);
 
     let start = Instant::now();
-    let nodes = black_box(perft(board, queue, depth, on));
+    let nodes = black_box(perft(board, queue, depth));
     let elapsed = start.elapsed();
     if on {
         println!(
