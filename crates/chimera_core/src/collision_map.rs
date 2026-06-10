@@ -20,7 +20,7 @@ impl CollisionMap {
         while rot_idx < canon_rots {
             let rot = Rotation::from(rot_idx as u8);
             if !piece.is_canonical(rot) {
-                data[rot_idx] = data[piece.canonical(rot) as usize];
+                data[rot_idx] = data[piece.canonical(rot) as usize]; // todo: offset canonical placements for correctness
                 rot_idx += 1;
                 continue;
             }
