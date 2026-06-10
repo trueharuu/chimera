@@ -1,7 +1,7 @@
 use crate::{
     board::Board,
     data::{PIECE_CELLS, x_range},
-    header::{COL_BITS, COL_MASK, COLS},
+    header::{COL_MASK, COLS},
     piece::Piece,
     rotation::Rotation,
 };
@@ -14,15 +14,16 @@ impl CollisionMap {
     /// Construct a collision map for the given board and piece.
     pub const fn new(board: Board, piece: Piece) -> Self {
         let mut data = [Board::EMPTY; Rotation::NB];
-        // let canon_rots = piece.canonical_rotations();
+        let canon_rots = piece.canonical_rotations();
 
         let mut rot_idx = 0;
-        while rot_idx < 4 {
+        while rot_idx < canon_rots {
             let rot = Rotation::from(rot_idx as u8);
-            // if !piece.is_canonical(rot) {
-            //     rot_idx += 1;
-            //     continue;
-            // }
+            if !piece.is_canonical(rot) {
+                data[rot_idx] = data[piece.canonical(rot) as usize];
+                rot_idx += 1;
+                continue;
+            }
 
             let cells = PIECE_CELLS[piece as usize][rot_idx];
             let (x_min, x_max) = x_range(piece, rot);
@@ -90,28 +91,14 @@ impl CollisionMap {
 
     /// Create a [`CollisionMap`] which only contains the landed states.
     #[inline(always)]
-    pub fn landable(mut self) -> Self {
+    pub const fn landable(mut self) -> Self {
         let mut r = 0;
         while r < Rotation::NB {
-            let mut new_cols = [0u64; COLS];
             let mut x = 0;
             while x < COLS {
-                let mut y = 0;
-                while y < COL_BITS {
-                    let mask = 1u64 << y;
-                    let bits = self.0[r].0[x];
-                    if (bits & mask) == 0 && (y == 0 || (bits & (mask >> 1)) != 0) {
-                        new_cols[x] |= mask;
-                    }
-                    y += 1;
-                }
+                let bits = self.0[r].0[x];
+                self.0[r].0[x] = (!bits & ((bits << 1) | 1)) & COL_MASK;
                 x += 1;
-            }
-
-            let mut c = 0;
-            while c < COLS {
-                self.0[r].0[c] = new_cols[c] & COL_MASK;
-                c += 1;
             }
             r += 1;
         }

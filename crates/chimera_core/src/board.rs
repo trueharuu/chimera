@@ -18,25 +18,29 @@ impl Board {
         (self.0[x] >> y) & 1 != 0
     }
 
-    /// Set the cell at `(x, y)` to `val`.
+    /// Set the cell at `(x, y)`.
     #[inline(always)]
-    pub const fn set(&mut self, x: usize, y: usize, val: bool) {
+    pub const fn set(&mut self, x: usize, y: usize) {
         debug_assert!(x < COLS && y < COL_BITS);
 
-        if val {
-            self.0[x] |= 1u64 << y;
-        } else {
-            self.0[x] &= !(1u64 << y);
-        }
+        self.0[x] |= 1u64 << y;
+    }
+
+    /// Clear the cell at `(x, y)`.
+    #[inline(always)]
+    pub const fn clear(&mut self, x: usize, y: usize) {
+        debug_assert!(x < COLS && y < COL_BITS);
+
+        self.0[x] &= !(1u64 << y);
     }
 
     /// Set of the cells described in `slice`. See [`Board::set`].
     #[inline(always)]
-    pub const fn set_many(&mut self, slice: &[(usize, usize)], val: bool) {
+    pub const fn set_many(&mut self, slice: &[(usize, usize)]) {
         let mut i = 0;
         while i < slice.len() {
             let (x, y) = slice[i];
-            self.set(x, y, val);
+            self.set(x, y);
             i += 1;
         }
     }
@@ -51,7 +55,7 @@ impl Board {
     /// and shift columns by `dx` (filling out-of-bounds columns with 0s,
     /// since the x_min/x_max guard handles those explicitly).
     #[inline(always)]
-    pub const fn shift(self, dx: i32, dy: i32) -> Board {
+    pub fn shift(self, dx: i32, dy: i32) -> Board {
         self.shift_rows(dy).shift_cols(dx)
     }
 
@@ -60,7 +64,7 @@ impl Board {
         if dy == 0 {
             return self;
         }
-        
+
         if dy > 0 {
             let s = dy as u32;
             let mut out = [0u64; COLS];
@@ -85,41 +89,29 @@ impl Board {
     }
 
     #[inline(always)]
-    pub const fn shift_cols(self, dx: i32) -> Board {
-        if dx == 0 {
-            self
-        } else if dx > 0 {
+    pub fn shift_cols(self, dx: i32) -> Board {
+        let mut out = [0; COLS];
+
+        if dx > 0 {
             let shift = dx as usize;
-            let mut out = [0u64; COLS];
-            let mut x = 0;
-            while x < COLS {
-                if x >= shift {
-                    out[x] = self.0[x - shift];
-                } else {
-                    out[x] = 0;
-                }
-                x += 1;
+            if shift < COLS {
+                out[shift..].copy_from_slice(&self.0[..COLS - shift]);
             }
-            Board(out)
-        } else {
+        } else if dx < 0 {
             let shift = (-dx) as usize;
-            let mut out = [0u64; COLS];
-            let mut x = 0;
-            while x < COLS {
-                if x + shift < COLS {
-                    out[x] = self.0[x + shift];
-                } else {
-                    out[x] = 0;
-                }
-                x += 1;
+            if shift < COLS {
+                out[..COLS - shift].copy_from_slice(&self.0[shift..]);
             }
-            Board(out)
+        } else {
+            return self;
         }
+
+        Board(out)
     }
 
     #[inline(always)]
     pub const fn apply(&mut self, c: Move) {
-        self.set_many(&c.cells(), true);
+        self.set_many(&c.cells());
     }
 }
 

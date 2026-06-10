@@ -21,10 +21,12 @@ impl Move {
         Self(0xFFFF)
     }
 
+    /// Raw bits of the move.
     pub const fn bits(self) -> u16 {
         self.0
     }
 
+    /// Create a move from raw bits. This is not guaranteed to be valid.
     pub const fn from_bits(bits: u16) -> Self {
         Self(bits)
     }
@@ -68,19 +70,31 @@ impl Move {
     }
 
     /// The cells this placement takes up.
+    #[inline(always)]
     pub const fn cells(self) -> [(usize, usize); 4] {
-        let mut out = [(self.x(), self.y()); 4];
-        let offsets = PIECE_CELLS[self.piece() as usize][self.rot() as usize];
+        let x = self.x();
+        let y = self.y();
 
-        let mut i = 0;
-        while i < offsets.len() {
-            out[i].0 = out[i].0.wrapping_add_signed(offsets[i].0 as isize);
-            out[i].1 = out[i].1.wrapping_add_signed(offsets[i].1 as isize);
+        let o = PIECE_CELLS[self.piece() as usize][self.rot() as usize];
 
-            i += 1;
-        }
-
-        out
+        [
+            (
+                x.wrapping_add_signed(o[0].0 as isize),
+                y.wrapping_add_signed(o[0].1 as isize),
+            ),
+            (
+                x.wrapping_add_signed(o[1].0 as isize),
+                y.wrapping_add_signed(o[1].1 as isize),
+            ),
+            (
+                x.wrapping_add_signed(o[2].0 as isize),
+                y.wrapping_add_signed(o[2].1 as isize),
+            ),
+            (
+                x.wrapping_add_signed(o[3].0 as isize),
+                y.wrapping_add_signed(o[3].1 as isize),
+            ),
+        ]
     }
 
     /// True if the move's rotation is the earliest congruent for its respective piece.

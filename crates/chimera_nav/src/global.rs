@@ -8,11 +8,9 @@ use chimera_core::{
     rotation::Rotation,
     spin::{Spin, Spins},
 };
-use rustc_hash::FxHashSet;
-
 use crate::buffer::MoveBuffer;
 use crate::detect::{is_immobile, t_spin_from_corners};
-use std::collections::HashSet;
+// no heap allocations for dedupe
 
 /// 'Global' mode movegen. No restrictions are made other than SRS.
 ///
@@ -43,7 +41,7 @@ pub fn movegen(board: Board, piece: Piece, spins: Spins, out: &mut MoveBuffer) {
 
     let cm = CollisionMap::new(board, piece);
 
-    // Build usable and candidate (landable) maps per rotation.
+    // build usable and candidate (landable) maps per rotation.
     // CollisionMap stores canonical rotations; map canonical -> rotation using canonicalize offsets.
     let landable = cm.landable();
     let mut usable: [Board; Rotation::NB] = [Board::EMPTY; Rotation::NB];
@@ -139,8 +137,11 @@ pub fn movegen(board: Board, piece: Piece, spins: Spins, out: &mut MoveBuffer) {
 
     let board_any = |b: &Board| b.0.iter().any(|&v| v != 0);
 
-    // collect canonicalized moves (u16 keys) to deduplicate
-    let mut keys: FxHashSet<u16> = FxHashSet::default();
+    // dedupe moves using a fixed-size bitset over 14-bit Move keys (no heap alloc)
+    const KEY_BITS: usize = 14;
+    const KEY_SIZE: usize = 1 << KEY_BITS; // 16384
+    const KEY_WORDS: usize = KEY_SIZE / 64; // 256
+    let mut seen: [u64; KEY_WORDS] = [0u64; KEY_WORDS];
 
     // BFS
     while done.iter().any(|&d| !d) {
@@ -197,7 +198,14 @@ pub fn movegen(board: Board, piece: Piece, spins: Spins, out: &mut MoveBuffer) {
                     let m = Move::new(x, y, Rotation::from(r as u8), piece, spin).canonicalize();
                     let key = m.bits();
 
-                    keys.insert(key);
+                    // check/set seen bit
+                    let ki = key as usize;
+                    let wi = ki >> 6;
+                    let bit = 1u64 << (ki & 63);
+                    if (seen[wi] & bit) == 0 {
+                        seen[wi] |= bit;
+                        out.push(Move::from_bits(key));
+                    }
 
                     col &= col - 1;
                 }
@@ -242,10 +250,5 @@ pub fn movegen(board: Board, piece: Piece, spins: Spins, out: &mut MoveBuffer) {
         }
     }
 
-    // emit unique canonical moves sorted by key
-    let mut keys_vec: Vec<u16> = keys.into_iter().collect();
-    keys_vec.sort_unstable();
-    for key in keys_vec {
-        out.push(Move::from_bits(key));
-    }
+    // done
 }
