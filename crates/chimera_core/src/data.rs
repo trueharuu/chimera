@@ -1,4 +1,4 @@
-use crate::{header::COLS, piece::Piece, rotation::Rotation};
+use crate::{piece::Piece, rotation::Rotation};
 
 /// `(dx, dy)` offsets of each mino relative to the SRS pivot point.
 /// `dy > 0` is upward.
@@ -57,27 +57,38 @@ pub const PIECE_CELLS: [[Cells; Rotation::NB]; Piece::NB] = [
     ],
 ];
 
+#[warn(clippy::match_same_arms)]
 /// Minimum x offset so the leftmost cell is at column 0, and the maximum x offset so the rightmost cell is at column 9.
 pub const fn x_range(piece: Piece, rot: Rotation) -> (i8, i8) {
-    let cells = PIECE_CELLS[piece as usize][rot as usize];
-
-    let mut min_dx = i8::MAX;
-    let mut max_dx = i8::MIN;
-    let mut i = 0;
-    while i < cells.len() {
-        let dx = cells[i].0;
-        if dx < min_dx {
-            min_dx = dx;
-        }
-
-        if dx > max_dx {
-            max_dx = dx;
-        }
-
-        i += 1;
+    match (piece, rot) {
+        (Piece::I, Rotation::North) => (1, 7),
+        (Piece::I, Rotation::East) | (Piece::I, Rotation::West) => (0, 9),
+        (Piece::I, Rotation::South) => (2, 8),
+        (Piece::T, Rotation::East)
+        | (Piece::J, Rotation::East)
+        | (Piece::L, Rotation::East)
+        | (Piece::O, Rotation::North)
+        | (Piece::O, Rotation::East)
+        | (Piece::S, Rotation::East)
+        | (Piece::Z, Rotation::East) => (0, 8),
+        (Piece::T, Rotation::North)
+        | (Piece::T, Rotation::South)
+        | (Piece::J, Rotation::North)
+        | (Piece::J, Rotation::South)
+        | (Piece::L, Rotation::North)
+        | (Piece::L, Rotation::South)
+        | (Piece::S, Rotation::North)
+        | (Piece::S, Rotation::South)
+        | (Piece::Z, Rotation::North)
+        | (Piece::Z, Rotation::South) => (1, 8),
+        (Piece::T, Rotation::West)
+        | (Piece::J, Rotation::West)
+        | (Piece::L, Rotation::West)
+        | (Piece::O, Rotation::South)
+        | (Piece::O, Rotation::West)
+        | (Piece::S, Rotation::West)
+        | (Piece::Z, Rotation::West) => (1, 9),
     }
-
-    (-min_dx, COLS as i8 - 1 - max_dx)
 }
 
 #[inline(always)]

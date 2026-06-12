@@ -48,8 +48,6 @@ pub fn movegen(board: Board, piece: Piece, spins: Spins, out: &mut MoveBuffer) {
     let mut candidates: [Board; Rotation::NB] = [Board::EMPTY; Rotation::NB];
 
     // compute per-rotation offsets to map canonical coordinates -> rotation coordinates
-    let mid_x = (COLS / 2).min(4); // safe center
-    let mid_y = (COL_BITS / 2).min(2);
     let mut offsets: [(i32, i32); Rotation::NB] = [(0, 0); Rotation::NB];
     for r in 0..Rotation::NB {
         let rot = Rotation::from(r as u8);

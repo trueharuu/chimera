@@ -1,11 +1,11 @@
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not};
 
 use crate::{
-    header::{COL_BITS, COL_MASK, COLS, fill_high, fill_low},
+    header::{COL_BITS, COLS},
     placement::Move,
 };
 
-/// Column-major board: array of column bitvectors.
+/// Column-major board with bitvector columns.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Board(pub [u64; COLS]);
 
@@ -16,7 +16,7 @@ impl Board {
         let mut result = [0u64; 10];
 
         for x in 0..10i32 {
-            let src_x = x + dx; 
+            let src_x = x + dx;
 
             if !(0..10).contains(&src_x) {
                 result[x as usize] = u64::MAX;
