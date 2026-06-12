@@ -21,7 +21,8 @@ impl CollisionMap {
             let r = Rotation::from(rot as u8);
             if !piece.is_canonical(r) {
                 let (dx, dy) = piece.rotation_offset(r);
-                states[rot] = states[piece.canonical(r) as usize].shift(dx as i32, dy as i32);
+                states[rot] = states[piece.canonical(r) as usize].shift(dx as i32, -dy as i32);
+                continue;
             }
             let cells = PIECE_CELLS[piece as usize][rot];
             let (dx0, dy0) = (cells[0].0 as isize, cells[0].1 as i32);
