@@ -29,7 +29,7 @@ impl MoveBuffer {
     /// Append a move to the end of the buffer.
     #[inline]
     pub const fn push(&mut self, m: Move) {
-        assert!(self.len < MAX_MOVES);
+        debug_assert!(self.len < MAX_MOVES);
         self.data[self.len] = m;
         self.len += 1;
     }
@@ -64,7 +64,20 @@ impl MoveBuffer {
         MoveIterMut::new(self)
     }
 
-    
+    #[inline]
+    pub fn retain<F>(&mut self, mut f: F)
+    where
+        F: FnMut(&Move) -> bool,
+    {
+        let mut dst = 0;
+        for src in 0..self.len {
+            if f(&self.data[src]) {
+                self.data[dst] = self.data[src];
+                dst += 1;
+            }
+        }
+        self.len = dst;
+    }    
 }
 
 impl Default for MoveBuffer {

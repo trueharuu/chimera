@@ -1,12 +1,13 @@
 use std::hint::black_box;
 
-use chimera_core::{board::Board, collision_map::CollisionMap, piece::Piece, rotation::Rotation};
+use chimera_core::{board::Board, piece::Piece, rotation::Rotation};
+use chimera_nav::collision_map::CollisionMap;
 use criterion::{Criterion, criterion_group, criterion_main};
 
 fn bench_get_landed(c: &mut Criterion) {
     let board = Board::EMPTY;
-    let cm_t = CollisionMap::new(board, Piece::T);
-    let cm_i = CollisionMap::new(board, Piece::I);
+    let cm_t = CollisionMap::new::<{ Piece::T as u8 }>(board);
+    let cm_i = CollisionMap::new::<{ Piece::I as u8 }>(board);
 
     let mut group = c.benchmark_group("collision_map_get");
 

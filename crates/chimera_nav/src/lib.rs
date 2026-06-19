@@ -1,8 +1,11 @@
+#![feature(const_trait_impl, const_index)]
 #![allow(clippy::needless_range_loop)]
 pub mod buffer;
 pub mod detect;
 pub mod global;
 pub mod instant;
+pub mod render;
+pub mod collision_map;
 
 #[cfg(test)]
 mod tests {

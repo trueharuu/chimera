@@ -69,15 +69,13 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 [[package]]
 name = "chimera_core"
 version = "0.1.0"
-dependencies = [
- "criterion",
-]
 
 [[package]]
 name = "chimera_nav"
 version = "0.1.0"
 dependencies = [
  "chimera_core",
+ "criterion",
  "rustc-hash",
 ]
 

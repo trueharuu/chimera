@@ -1,4 +1,4 @@
-use crate::spin::Spin;
+use chimera_core::{board::Board, placement::Move, spin::Spin};
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct ScoreConfig {
@@ -24,20 +24,51 @@ pub struct ScoreConfig {
     pub level: usize,
 }
 
+impl ScoreConfig {
+    pub const fn blitz() -> Self {
+        Self {
+            single: 100,
+            double: 300,
+            triple: 500,
+            quad: 800,
+            spin_zero: 400,
+            spin_mini: 100,
+            spin_mini_single: 200,
+            spin_single: 800,
+            spin_double: 1200,
+            spin_mini_double: 400,
+            spin_triple: 1600,
+            spin_mini_triple: 600,
+            spin_quad: 2000,
+            spin_mini_quad: 900,
+            b2b: 0.5,
+            scale_b2b: false,
+            combo: 50,
+            perfect_clear: 3500,
+            level: 1,
+        }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq)]
 pub struct ScoringEvent {
-    pub pc: bool,
+    pub board: Board,
+    pub placement: Move,
     pub b2b: usize,
     pub combo: usize,
-    pub spin: Spin,
-    pub line_clears: usize,
     pub config: ScoreConfig,
     pub level: usize,
 }
 
 impl ScoringEvent {
-    pub const fn score(self) -> usize {
-        let base = match (self.line_clears, self.spin) {
+    pub fn score(mut self) -> usize {
+        let line_clears_before = self.board.filled_rows().count_ones() as usize;
+        self.board.apply(self.placement);
+        let mask = self.board.filled_rows();
+        let line_clears = mask.count_ones() as usize - line_clears_before;
+        self.board.clearshift(mask);
+
+        let base = match (line_clears, self.placement.spin()) {
             (0, Spin::None) => 0,
             (0, Spin::Mini) => self.config.spin_mini,
             (0, Spin::Full) => self.config.spin_zero,
@@ -63,7 +94,7 @@ impl ScoringEvent {
         };
         let combo_score = self.config.combo * self.combo;
 
-        let pc_score = self.pc as usize * self.config.perfect_clear;
+        let pc_score = (self.board == Board::EMPTY) as usize * self.config.perfect_clear;
 
         let total = base + extra + combo_score + pc_score;
         

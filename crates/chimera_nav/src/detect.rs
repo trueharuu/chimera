@@ -1,7 +1,9 @@
 use chimera_core::{
-    board::Board, collision_map::CollisionMap, header::COLS,
+    board::Board, header::COLS,
     rotation::Rotation, spin::Spin,
 };
+
+use crate::collision_map::CollisionMap;
 
 #[inline]
 pub const fn spin_max(a: Spin, b: Spin) -> Spin {
@@ -13,7 +15,7 @@ pub const fn spin_max(a: Spin, b: Spin) -> Spin {
 }
 
 #[inline]
-pub fn is_immobile(cm: &CollisionMap, rot: Rotation, x: usize, y: usize) -> bool {
+pub fn is_immobile<const PIECE: u8>(cm: &CollisionMap, rot: Rotation, x: usize, y: usize) -> bool {
     // Left
     if x > 0 && !cm.collides(x - 1, y, rot) {
         return false;

@@ -6,3 +6,14 @@ edition = "2024"
 [dependencies]
 chimera_core = { version = "0.1.0", path = "../chimera_core" }
 rustc-hash = "2.1.2"
+
+[dev-dependencies]
+criterion = "0.8.2"
+
+[[bench]]
+name = "collision_map"
+harness = false
+
+[[bench]]
+name = "collision_map_get"
+harness = false

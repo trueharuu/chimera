@@ -11,6 +11,7 @@ pub struct Board(pub [u64; COLS]);
 
 impl Board {
     pub const EMPTY: Self = Self([0u64; COLS]);
+    pub const FULL: Self = Self([!0u64; COLS]);
 
     pub fn shift(self, dx: i32, dy: i32) -> Board {
         let mut result = [0u64; 10];

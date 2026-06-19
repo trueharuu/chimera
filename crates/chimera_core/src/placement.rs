@@ -97,7 +97,7 @@ impl Move {
         ]
     }
 
-    /// True if the move's rotation is the earliest congruent for its respective piece.
+    /// Whether the move's rotation is the earliest congruent for its respective piece.
     ///
     /// - For [`Piece::T`], [`Piece::J`], and [`Piece::L`]: all 4 rotations are canonical.
     /// - For [`Piece::I`], [`Piece::S`], and [`Piece::Z`]: only [`Rotation::North`] and [`Rotation::East`] are canonical.
@@ -115,98 +115,14 @@ impl Move {
 
     /// Returns a move which is congruent to this one, canonicalizing the rotation and moving the center.
     pub const fn canonicalize(self) -> Self {
-        match self.piece() {
-            Piece::T | Piece::J | Piece::L => self,
-            Piece::S | Piece::Z => {
-                // if we are in south, add (0, -1) and rotate to north
-                if matches!(self.rot(), Rotation::South) {
-                    return Self::new(
-                        self.x(),
-                        self.y() - 1,
-                        Rotation::North,
-                        self.piece(),
-                        self.spin(),
-                    );
-                }
-
-                // if we are in west, add (-1, 0) and rotate to east
-                if matches!(self.rot(), Rotation::West) {
-                    return Self::new(
-                        self.x() - 1,
-                        self.y(),
-                        Rotation::East,
-                        self.piece(),
-                        self.spin(),
-                    );
-                }
-
-                self
-            }
-
-            Piece::I => {
-                // if we are in south, add (-1, 0) and rotate to north
-                if matches!(self.rot(), Rotation::South) {
-                    return Self::new(
-                        self.x() - 1,
-                        self.y(),
-                        Rotation::North,
-                        self.piece(),
-                        self.spin(),
-                    );
-                }
-
-                // if we are in west, add (0, -1) and rotate to east
-                if matches!(self.rot(), Rotation::West) {
-                    return Self::new(
-                        self.x(),
-                        self.y() - 1,
-                        Rotation::East,
-                        self.piece(),
-                        self.spin(),
-                    );
-                }
-
-                self
-            }
-
-            Piece::O => {
-                // if we are in east, add (0, -1) and rotate to north
-                if matches!(self.rot(), Rotation::East) {
-                    return Self::new(
-                        self.x(),
-                        self.y() - 1,
-                        Rotation::North,
-                        self.piece(),
-                        self.spin(),
-                    );
-                }
-
-                // if we are in south, add (-1, -1) and rotate to north
-                if matches!(self.rot(), Rotation::South) {
-                    return Self::new(
-                        self.x() - 1,
-                        self.y() - 1,
-                        Rotation::North,
-                        self.piece(),
-                        self.spin(),
-                    );
-                }
-
-                // if we are in west, add (-1, 0) and rotate to north
-                if matches!(self.rot(), Rotation::West) {
-                    return Self::new(
-                        self.x() - 1,
-                        self.y(),
-                        Rotation::North,
-                        self.piece(),
-                        self.spin(),
-                    );
-                }
-
-                self
-                // _ => self,
-            }
-        }
+        let (dx, dy) = self.piece().rotation_offset(self.rot());
+        Self::new(
+            self.x().wrapping_add_signed(dx as isize),
+            self.y().wrapping_add_signed(dy as isize),
+            self.piece().canonical(self.rot()),
+            self.piece(),
+            self.spin(),
+        )
     }
 }
 
